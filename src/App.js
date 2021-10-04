@@ -1,24 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+/*global chrome*/
+import { Grid } from '@mui/material';
+import Button from '@mui/material/Button';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+    <Grid
+      container
+      direction="row"
+      justify="center"
+      alignItems="center"
+      sx={{
+        width: 200,
+        height: 400,
+      }}
+    >
+      <Grid 
+        item 
+        container 
+        justifyContent="center"
+      >
+        <Button
+          onClick={() => {
+            chrome.tabs.query({currentWindow: true, active: true}, tabs => {
+              chrome.tabs.sendMessage(tabs[0].id, tabs[0].url)
+            })
+          }}
         >
-          Learn React
-        </a>
-      </header>
-    </div>
+          test
+        </Button>
+      </Grid>
+    </Grid>
   );
 }
 
