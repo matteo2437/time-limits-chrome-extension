@@ -1,12 +1,12 @@
-import { getTime } from "../utilities/GetTime";
-import { UrlsUtilities } from "./UrlsUtilities";
+import TimeUtilities from "../utilities/GetTime.js";
+import UrlsUtilities from "./UrlsUtilities.js";
 
-export class UrlsController extends UrlsUtilities{
+export default class UrlsController extends UrlsUtilities{
   
   constructor(){
     super({debugMode: true})
 
-    this.previusTime = getTime();
+    this.previusTime = TimeUtilities.getTime()
     
     this.newUrl = undefined;
     this.newTabId = undefined;
@@ -18,11 +18,27 @@ export class UrlsController extends UrlsUtilities{
   isNewUrlLegit = () => {return !this.newUrl}
 
   getSessionTime = () => {
-    const currentTime = getTime();
+    const currentTime = TimeUtilities.getTime()
     const sessionTime = currentTime - this.previusTime
     this.previusTime = currentTime
 
     return sessionTime
+  }
+
+  getUpdatedUrlObj = (urlIndex) => {
+    const urlObj = this.getUrl(urlIndex)
+
+    const sessionTime = this.getSessionTime();
+    const totalTime = sessionTime + urlObj.totalTime.ms
+    const sessions = urlObj.sessions + 1
+
+    return {
+      ...urlObj,
+      sessions:         sessions,
+      lastSessionTime:  TimeUtilities.getTimeObj(sessionTime),
+      totalTime:        TimeUtilities.getTimeObj(totalTime),
+      averageTime:      TimeUtilities.getTimeObj(totalTime / sessions)
+    }
   }
 
   tryUpdatePreviusUrl = () => {
@@ -30,27 +46,13 @@ export class UrlsController extends UrlsUtilities{
     if(isUrlNotChanged)
       return;
 
-    const previusIndex = this.findUrlIndex(super.previusUrl)
-    if(previusIndex === -1){
-      this.previusTime = getTime()
+    const previusUrlIndex = this.findUrlIndex(this.getPreviusUrl())
+    if(previusUrlIndex === -1){
+      this.previusTime = TimeUtilities.getTime()
       return
     }
 
-    const previusUrlObj = this.getUrl(previusIndex)
-    
-    const sessionTime = this.getSessionTime()    
-    const totalTime = sessionTime + previusUrlObj.totalTime
-    const sessions = previusUrlObj.sessions + 1
-
-    const newUrlObj = {
-      ...previusUrlObj,
-      sessions: sessions,
-      lastSessionTime:  sessionTime,
-      totalTime:        totalTime,
-      averageTime:      totalTime / sessions
-    }
-
-    this.setUrl(previusIndex, newUrlObj)
+    this.setUrl(previusUrlIndex, this.getUpdatedUrlObj(previusUrlIndex))
   }
 
   updateUrls = () => {
@@ -65,12 +67,13 @@ export class UrlsController extends UrlsUtilities{
       return
     }
 
+    const emptyTimeObj = TimeUtilities.getTimeObj(0)
     const newUrlObj = {
-      url: this.newUrl,
-      sessions: 0,
-      lastSessionTime: 0,
-      totalTime: 0,
-      averageTime: 0,
+      url:              this.newUrl,
+      sessions:         0,
+      lastSessionTime:  emptyTimeObj,
+      totalTime:        emptyTimeObj,
+      averageTime:      emptyTimeObj,
     };
 
     this.addUrl(newUrlObj)

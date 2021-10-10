@@ -1,6 +1,6 @@
 /*global chrome*/
 
-export class UrlsUtilities {
+export default class UrlsUtilities {
   constructor({debugMode}){
     this.debugMode = debugMode
 
@@ -36,6 +36,7 @@ export class UrlsUtilities {
 
   getUrls = () => {return this.urls}
   getUrl = (index) => {return this.urls[index]}
+  getPreviusUrl = () => {return this.previusUrl}
 
   storeUrls = () => {
     chrome.storage.local.set({urls: this.getUrls()});
