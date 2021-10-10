@@ -1,30 +1,15 @@
 /*global chrome*/
+import UrlsListeners from "./UrlsListeners.js";
 
-export default class UrlsUtilities {
+export default class UrlsUtilities extends UrlsListeners{
   constructor({debugMode}){
+    super()
     this.debugMode = debugMode
 
     this.urls = []
 
-    this.currentTabId = undefined;
-
     this.previusTabId = undefined;
     this.previusUrl =  "";
-  }
-
-  getUrlListener = (action) => {
-    chrome.tabs.onActivated.addListener(({tabId}) => {
-      this.setTabId(tabId)      
-      chrome.tabs.get(tabId, (tab) => action(tabId, tab.url))
-    });
-  
-    chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-      if(tabId !== this.currentTabId)
-        return
-  
-      if(changeInfo.url)
-        action(tabId, changeInfo.url)
-    })
   }
 
   loadUrlsFromStorage = () => {
@@ -43,7 +28,6 @@ export default class UrlsUtilities {
   }
 
   setUrl = (index, urlObj) => {this.urls[index] = urlObj}
-  setTabId = (tabId) => {this.currentTabId = tabId}
   setPreviusUrl = (url) => {this.previusUrl = url}
   setPreviusTabId = (tabId) => {this.previusTabId = tabId}
 
