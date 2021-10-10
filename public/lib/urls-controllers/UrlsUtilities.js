@@ -13,11 +13,8 @@ export default class UrlsUtilities {
   }
 
   getUrlListener = (action) => {
-    chrome.tabs.onActivated.addListener((activeInfo) => {
-      this.setPreviusTabId(this.currentTabId)
-      const tabId = activeInfo.tabId;
-      this.setTabId(tabId)
-      
+    chrome.tabs.onActivated.addListener(({tabId}) => {
+      this.setTabId(tabId)      
       chrome.tabs.get(tabId, (tab) => action(tabId, tab.url))
     });
   
@@ -30,7 +27,7 @@ export default class UrlsUtilities {
     })
   }
 
-  getUrlsFromStorage = () => {
+  loadUrlsFromStorage = () => {
     chrome.storage.local.get(['urls'], result => this.urls = result.urls)
   }
 
@@ -52,14 +49,28 @@ export default class UrlsUtilities {
 
   addUrl = (newUrlObj) => {this.urls.push(newUrlObj)}
 
+  resetUrls = () => {chrome.storage.local.set({urls: []})}
+  printUrls = () => {chrome.storage.local.get(['urls'], console.log)}
+
+  isUrlNotChanged = (newUrl, newTabId) => {
+    return newUrl === this.previusUrl && newTabId === this.previusTabId
+  }
+
   findUrlIndex = (urlToFind) => {
     return this.urls.findIndex(url => url.url === urlToFind)
   }
 
-  isUrlChanged = (newUrl, newTabId) => {
-    return !(newUrl === this.previusUrl && newTabId === this.previusTabId)
+  removeTheOldestSeen = () => {
+    let min = Number.MAX_VALUE
+    let urlIndex;
+    this.urls.forEach((url, index) => {
+      if(url.lastSeen <= min){
+        min = url.lastSeen;
+        urlIndex = index
+      }
+    })
+
+    this.urls.splice(urlIndex, 1)
   }
 
-  resetUrls = () => {chrome.storage.local.set({urls: []})}
-  printUrls = () => {chrome.storage.local.get(['urls'], console.log)}
 }

@@ -3,19 +3,21 @@ import UrlsUtilities from "./UrlsUtilities.js";
 
 export default class UrlsController extends UrlsUtilities{
   
-  constructor(){
+  constructor({maxUrls} = {maxUrls: 25}){
     super({debugMode: true})
 
     this.previusTime = TimeUtilities.getTime()
     
     this.newUrl = undefined;
     this.newTabId = undefined;
+
+    this.maxUrls = maxUrls
   }
 
   setNewUrl = (newUrl) => {this.newUrl = this.prepareUrl(newUrl)}
   setNewTabId = (newTabId) => {this.newTabId = newTabId}
 
-  isNewUrlLegit = () => {return !this.newUrl}
+  isNewUrlNotLegit = () => {return !this.newUrl}
 
   getSessionTime = () => {
     const currentTime = TimeUtilities.getTime()
@@ -29,21 +31,23 @@ export default class UrlsController extends UrlsUtilities{
     const urlObj = this.getUrl(urlIndex)
 
     const sessionTime = this.getSessionTime();
-    const totalTime = sessionTime + urlObj.totalTime.ms
+    const totalTime = sessionTime + urlObj.times.totalTime.ms
     const sessions = urlObj.sessions + 1
 
     return {
       ...urlObj,
-      sessions:         sessions,
-      lastSessionTime:  TimeUtilities.getTimeObj(sessionTime),
-      totalTime:        TimeUtilities.getTimeObj(totalTime),
-      averageTime:      TimeUtilities.getTimeObj(totalTime / sessions)
+      sessions: sessions,
+      lastSeen: TimeUtilities.getTime(),
+      times: {
+        lastSessionTime:  TimeUtilities.getTimeObj(sessionTime),
+        totalTime:        TimeUtilities.getTimeObj(totalTime),
+        averageTime:      TimeUtilities.getTimeObj(totalTime / sessions),
+      }
     }
   }
 
   tryUpdatePreviusUrl = () => {
-    const isUrlNotChanged = !this.isUrlChanged(this.newUrl, this.newTabId)
-    if(isUrlNotChanged)
+    if(this.isUrlNotChanged(this.newUrl, this.newTabId))
       return;
 
     const previusUrlIndex = this.findUrlIndex(this.getPreviusUrl())
@@ -56,25 +60,34 @@ export default class UrlsController extends UrlsUtilities{
   }
 
   updateUrls = () => {
+    if(this.isUrlNotChanged(this.newUrl, this.newTabId))
+      return
+
     this.setPreviusUrl(this.newUrl)
     this.setPreviusTabId(this.newTabId)
 
     const urlIndex = this.findUrlIndex(this.newUrl)
     const isUrlNotNew = urlIndex !== -1
 
-    if(this.isNewUrlLegit() || isUrlNotNew){
+    if(this.isNewUrlNotLegit() || isUrlNotNew){
       this.storeUrls()
       return
     }
 
     const emptyTimeObj = TimeUtilities.getTimeObj(0)
     const newUrlObj = {
-      url:              this.newUrl,
-      sessions:         0,
-      lastSessionTime:  emptyTimeObj,
-      totalTime:        emptyTimeObj,
-      averageTime:      emptyTimeObj,
+      url:      this.newUrl,
+      sessions: 0,
+      lastSeen: TimeUtilities.getTime(),
+      times: {
+        lastSessionTime:  emptyTimeObj,
+        totalTime:        emptyTimeObj,
+        averageTime:      emptyTimeObj,
+      }
     };
+
+    if(this.getUrls().length >= this.maxUrls)
+      this.removeTheOldestSeen()
 
     this.addUrl(newUrlObj)
     this.storeUrls()
