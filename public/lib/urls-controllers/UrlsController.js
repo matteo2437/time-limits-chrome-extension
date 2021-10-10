@@ -34,6 +34,10 @@ export default class UrlsController extends UrlsUtilities{
     const totalTime = sessionTime + urlObj.times.totalTime.ms
     const sessions = urlObj.sessions + 1
 
+    const thereWasNotASession = sessionTime <= 10
+    if(thereWasNotASession)
+      return urlObj
+
     return {
       ...urlObj,
       sessions: sessions,
