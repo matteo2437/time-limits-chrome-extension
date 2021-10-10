@@ -44,7 +44,13 @@ const prepareUrl = (url, action) => {
 }
 
 const findUrl = (urls, urlToFind) => {
-  return urls.findIndex(url => url.url === urlToFind)
+  return new Promise((resolve, reject) => {
+    index = urls.findIndex(url => url.url === urlToFind)
+    if(index == -1)
+      reject();
+
+    resolve(index)
+  })
 }
 
 const getTime = () => {
@@ -72,66 +78,76 @@ const getUrls = () => {
 }
 
 
-const addUrl = (urls, url) => {
-  return new Promise((resolve, reject) => {
 
-  })
+
+const updatePreviusUrl = (urls, previusUrl) => {
+  findUrl(urls, previusUrl)
+    .then(index => {
+      const sessionTime = getTime() - previusTime
+
+      const previusUrlObj = urls[index]
+      urls[index] = {
+        ...previusUrlObj,
+        lastSessionTime:  sessionTime,
+        totalTime:        sessionTime + previusUrlObj.totalTime,
+        averageTime:      previusUrlObj.totalTime / previusUrlObj.sessions
+      }
+    })
+    .catch(_ => {})
+}
+
+const isUrlNotChanged = (newUrl, tabId) => {
+  return newUrl === previusUrl && tabId === previusTabId
+}
+
+const isUrlEmpty = (url) => {
+  return url === ""
+}
+
+const addUrl = (urls, newUrl) => {
+  findUrl(urls, newUrl)
+    .then(index => urls[index].sessions++)
+    .catch(_ => {
+      urls.push({
+        url: newUrl,
+        sessions: 1,
+        lastSessionTime: 0,
+        totalTime: 0,
+        averageTime: 0,
+      })
+    })
 }
 
 resetUrls()
 getUrlListener((tabId, url) => {
   let urls = [];
 
-  getUrls()
-    .prepareUrl()
-    .then(console.log)
+  //getUrls()
+    //.then(urls => prepareUrl(urls, url))
 
-  /*chrome.storage.local.get(['urls'], (result) => {
+  chrome.storage.local.get(['urls'], (result) => {
     if(Array.isArray(result.urls)){
       urls = result.urls
       prepareUrl(url, newUrl => {
 
-        const isWebsiteNotChanged = newUrl === previusUrl && tabId === previusTabId
-        if(isWebsiteNotChanged)
+        if(isUrlNotChanged(newUrl, tabId))
           return
 
-        const currentUrlIndex = findUrl(urls, newUrl)
-        const previusUrlIndex = findUrl(urls, previusUrl)
-
-        const thereIsAPreviusUrl = previusUrlIndex !== -1
-        if(thereIsAPreviusUrl) {
-          const sessionTime = getTime() - previusTime
-          urls[previusUrlIndex].lastSessionTime = sessionTime
-          urls[previusUrlIndex].totalTime += sessionTime
-          urls[previusUrlIndex].averageTime = urls[previusUrlIndex].totalTime / urls[previusUrlIndex].sessions
-        }
+        updatePreviusUrl(urls, previusUrl)
 
         previusTime = getTime()
         previusUrl = newUrl;
 
-        const urlIsEmpty = newUrl === ""
-        if(urlIsEmpty)
+        if(isUrlEmpty(newUrl))
           return
 
-        const thereIsNotACurrentUrl = currentUrlIndex === -1
-        if(thereIsNotACurrentUrl){
-          urls.push({
-            url: newUrl,
-            sessions: 1,
-            lastSessionTime: 0,
-            totalTime: 0,
-            averageTime: 0,
-          })
-          return;
-        }
-
-        urls[currentUrlIndex].sessions++;
+        addUrl(urls, newUrl)
       })
     }
 
     updateUrls(urls)
     printUrls()
-  })*/
+  })
 })
 
 
