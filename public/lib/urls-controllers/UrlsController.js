@@ -62,10 +62,7 @@ export default class UrlsController extends UrlsUtilities{
     const urlIndex = this.findUrlIndex(this.newUrl)
     const isUrlNotNew = urlIndex !== -1
 
-    if(isUrlNotNew)
-      return
-
-    if(this.isNewUrlLegit()){
+    if(this.isNewUrlLegit() || isUrlNotNew){
       this.storeUrls()
       return
     }
