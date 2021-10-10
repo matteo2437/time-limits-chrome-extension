@@ -6,7 +6,7 @@ c.resetUrls()
 c.loadUrlsFromStorage()
 c.printUrls()
 
-c.getUrlListener((tabId, url) => {
+c.onTabFocusChangeListener((tabId, url) => {
   c.setNewUrl(url)
   c.setNewTabId(tabId)
   c.tryUpdatePreviusUrl()
