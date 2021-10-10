@@ -2,7 +2,7 @@ import UrlsController from "./lib/urls-controllers/UrlsController.js";
 
 const c = new UrlsController();
 
-c.resetUrls()
+//c.resetUrls()
 c.getUrlsFromStorage()
 c.printUrls()
 
