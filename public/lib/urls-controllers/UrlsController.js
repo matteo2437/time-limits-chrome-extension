@@ -1,4 +1,4 @@
-import TimeUtilities from "../utilities/TimeUtilities.js";
+import TimeUtilities from "../TimeUtilities.js";
 import UrlsUtilities from "./UrlsUtilities.js";
 
 export default class UrlsController extends UrlsUtilities{

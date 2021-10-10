@@ -1,4 +1,4 @@
-import UrlsController from "./urls-controllers/UrlsController.js";
+import UrlsController from "./lib/urls-controllers/UrlsController.js";
 
 const c = new UrlsController();
 
