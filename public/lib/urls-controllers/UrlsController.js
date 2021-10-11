@@ -29,24 +29,35 @@ export default class UrlsController extends UrlsUtilities{
 
   getUpdatedUrlObj = (urlIndex) => {
     const urlObj = this.getUrl(urlIndex)
+    const dayActivities = urlObj.dayActivities
 
     const sessionTime = this.getSessionTime();
-    const totalTime = sessionTime + urlObj.times.totalTime.ms
-    const sessions = urlObj.sessions + 1
+    const totalTime = sessionTime + dayActivities[0].times.totalTime.ms
+    const sessions = dayActivities[0].sessions + 1
+
+    const oldLongestSessionTime = dayActivities[0].times.longestSessionTime.ms
+    const longestSessionTime = sessionTime > oldLongestSessionTime 
+      ? sessionTime 
+      :  oldLongestSessionTime
 
     const thereWasNotASession = sessionTime <= 10
     if(thereWasNotASession)
       return urlObj
 
+    dayActivities[0] = {
+      sessions: sessions,
+      times: {
+        longestSessionTime: TimeUtilities.getTimeObj(longestSessionTime),
+        lastSessionTime:    TimeUtilities.getTimeObj(sessionTime),
+        totalTime:          TimeUtilities.getTimeObj(totalTime),
+        averageTime:        TimeUtilities.getTimeObj(totalTime / sessions),
+      }
+    }
+
     return {
       ...urlObj,
-      sessions: sessions,
       lastSeen: TimeUtilities.getTime(),
-      times: {
-        lastSessionTime:  TimeUtilities.getTimeObj(sessionTime),
-        totalTime:        TimeUtilities.getTimeObj(totalTime),
-        averageTime:      TimeUtilities.getTimeObj(totalTime / sessions),
-      }
+      dayActivities: dayActivities
     }
   }
 
@@ -63,7 +74,31 @@ export default class UrlsController extends UrlsUtilities{
     this.setUrl(previusUrlIndex, this.getUpdatedUrlObj(previusUrlIndex))
   }
 
+  createAndAddNewUrl = () => {
+    const emptyTimeObj = TimeUtilities.getTimeObj(0)
+    const newUrlObj = {
+      url:      this.newUrl,
+      lastSeen: TimeUtilities.getTime(),
+      dayActivities: [{
+        sessions: 0,
+        times: {
+          longestSessionTime: emptyTimeObj,
+          lastSessionTime:    emptyTimeObj,
+          totalTime:          emptyTimeObj,
+          averageTime:        emptyTimeObj,
+        }
+      }]
+    };
+
+    if(this.getUrls().length >= this.maxUrls)
+      this.removeTheOldestSeen()
+
+    this.addUrl(newUrlObj)
+  }
+
   updateUrls = () => {
+    this.tryUpdatePreviusUrl()
+
     if(this.isUrlNotChanged(this.newUrl, this.newTabId))
       return
 
@@ -73,27 +108,10 @@ export default class UrlsController extends UrlsUtilities{
     const urlIndex = this.findUrlIndex(this.newUrl)
     const isUrlNotNew = urlIndex !== -1
 
-    if(this.isNewUrlNotLegit() || isUrlNotNew){
-      this.storeUrls()
-      return
-    }
+    if(this.isNewUrlNotLegit() || isUrlNotNew)      
+      return this.storeUrls()
 
-    const emptyTimeObj = TimeUtilities.getTimeObj(0)
-    const newUrlObj = {
-      url:      this.newUrl,
-      sessions: 0,
-      lastSeen: TimeUtilities.getTime(),
-      times: {
-        lastSessionTime:  emptyTimeObj,
-        totalTime:        emptyTimeObj,
-        averageTime:      emptyTimeObj,
-      }
-    };
-
-    if(this.getUrls().length >= this.maxUrls)
-      this.removeTheOldestSeen()
-
-    this.addUrl(newUrlObj)
+    this.createAndAddNewUrl()
     this.storeUrls()
   }
 

@@ -8,10 +8,8 @@ export default class UrlsListeners {
 
   onWindowFocusChangedListener = (action) => {
     chrome.windows.onFocusChanged.addListener(number => {
-      if(number === -1){
-        action(-1, "")
-        return
-      }
+      if(number === -1)        
+        return action(-1, "")
 
       if(!this.currentTabId)
         return

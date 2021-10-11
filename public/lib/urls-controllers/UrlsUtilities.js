@@ -1,4 +1,5 @@
 /*global chrome*/
+import TimeUtilities from "../TimeUtilities.js";
 import UrlsListeners from "./UrlsListeners.js";
 
 export default class UrlsUtilities extends UrlsListeners{
@@ -7,13 +8,17 @@ export default class UrlsUtilities extends UrlsListeners{
     this.debugMode = debugMode
 
     this.urls = []
+    this.lastUpdate = undefined
 
     this.previusTabId = undefined;
     this.previusUrl =  "";
   }
 
   loadUrlsFromStorage = () => {
-    chrome.storage.local.get(['urls'], result => this.urls = result.urls)
+    chrome.storage.local.get(['urls'], result => {
+      this.urls = result.urls.urls
+      this.lastUpdate = result.urls.lastUpdate
+    })
   }
 
   getUrls = () => {return this.urls}
@@ -21,7 +26,10 @@ export default class UrlsUtilities extends UrlsListeners{
   getPreviusUrl = () => {return this.previusUrl}
 
   storeUrls = () => {
-    chrome.storage.local.set({urls: this.getUrls()});
+    chrome.storage.local.set({urls: {
+      urls: this.getUrls(),
+      lastUpdate: TimeUtilities.getTime()
+    }});
 
     if(this.debugMode)
       this.printUrls()
@@ -33,8 +41,11 @@ export default class UrlsUtilities extends UrlsListeners{
 
   addUrl = (newUrlObj) => {this.urls.push(newUrlObj)}
 
-  resetUrls = () => {chrome.storage.local.set({urls: []})}
   printUrls = () => {chrome.storage.local.get(['urls'], console.log)}
+  resetUrls = () => {chrome.storage.local.set({urls: {
+    urls: [],
+    lastUpdate: TimeUtilities.getTime()
+  }})}
 
   isUrlNotChanged = (newUrl, newTabId) => {
     return newUrl === this.previusUrl && newTabId === this.previusTabId
