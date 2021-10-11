@@ -46,6 +46,7 @@ function App() {
             <TableCell align="right">Total Time</TableCell>
             <TableCell align="right">Average Time</TableCell>
             <TableCell align="right">Last Session Time</TableCell>
+            <TableCell align="right">Longest Session Time</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -59,6 +60,7 @@ function App() {
               <TableCell align="right">{row.times.totalTime.time}</TableCell>
               <TableCell align="right">{row.times.averageTime.time}</TableCell>
               <TableCell align="right">{row.times.lastSessionTime.time}</TableCell>
+              <TableCell align="right">{row.times.longestSessionTime.time}</TableCell>
             </TableRow>
           ))}
         </TableBody>
